@@ -1,0 +1,57 @@
+import cv2
+import torch
+from xml.dom.minidom import parse
+import os
+import xml.etree.ElementTree as ET
+#  xml.etree.ElementTree模块实现了一个简单而高效的API用于解析和创建XML数据。
+
+
+# 批量处理
+annota_dir = r'F:\yaogandataset\DIOR_xigongda\annotations/'
+origin_dir = r'F:\yaogandataset\DIOR_xigongda\JPEGImages-trainval/'
+target_dir1= 'F:\classify_datasets/'
+
+# 函数的作用是将标注文件上的坐标画在原图上并输出
+def divide_image(oriname):
+
+    # 定义原始图像文件路径
+    img_file = os.path.join(origin_dir,oriname + '.jpg')
+    im = cv2.imread(img_file)
+
+    # 定义原始标注文件路径
+    xml_file = os.path.join(annota_dir,oriname + '.xml')
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    # for循环找到有多少目标
+    for object in root.findall('object'):
+        object_name = object.find('name').text
+        Xmin = int(object.find('bndbox').find('xmin').text)
+        Ymin = int(object.find('bndbox').find('ymin').text)
+        Xmax = int(object.find('bndbox').find('xmax').text)
+        Ymax = int(object.find('bndbox').find('ymax').text)
+        print("Xmin: ,Ymin: ,Xmax: ,Ymax: ",(Xmin,Ymin,Xmax,Ymax))
+        print(object_name)
+        color1 = (250, 0, 0)
+
+
+        # cv2.rectangle
+        # 输入参数分别为图像、左上角坐标、右下角坐标、颜色数组、粗细
+        cv2.rectangle(im, (Xmin, Ymin), (Xmax, Ymax), color1, 2)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        # cv2.putText()  标注文本
+        # 输入参数为图像、文本、位置、字体、大小、颜色数组、粗细
+        cv2.putText(im, object_name, (Xmin, Ymin - 7), font, 0.5, (0, 250, 250), 2)
+        # cv2.imshow('01', im)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+    img_name = oriname + '.jpg'
+    to_name = os.path.join(target_dir1,img_name)
+    cv2.imwrite(to_name, im)
+
+
+img_list = os.listdir(origin_dir)
+for name in img_list:
+    divide_image(name.rstrip('.jpg'))
